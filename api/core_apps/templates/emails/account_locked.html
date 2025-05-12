@@ -1,0 +1,12 @@
+{% extends "emails/base.html" %}
+
+{% block title %}
+    Account Locked
+{% endblock %}
+
+{% block content %}
+    <h1>Account Locked</h1>
+    <p> Dear {{ user.full_name }} </p>
+    <p>Your account has been locked due to too many failed login attempts. For security reasons, your account has been locked for <b>{{ lockout_duration }} minutes.</b></p>
+    <p>Please contact support if you believe this is an error.</p>
+{% endblock %}
