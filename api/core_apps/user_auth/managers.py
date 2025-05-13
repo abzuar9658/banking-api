@@ -32,7 +32,7 @@ class UserManager(DjangoUserManager):
             raise ValueError(_('A password is required'))
         
         email = self.normalize_email(email)
-        email = validate_email_address(email)
+        validate_email_address(email)
         username = generate_username(email)
         user = self.model(email=email, username=username, **extra_fields)
         user.password = make_password(password)
@@ -41,17 +41,12 @@ class UserManager(DjangoUserManager):
     
     def create_user(self, email: str, password: Optional[str] = None, **extra_fields) -> Any:
         extra_fields.setdefault('is_superuser', False)
-        extra_fields.setdefault('is_staff', False)
         return self._create_user(email, password, **extra_fields)
     
     def create_superuser(self, email: str, password: Optional[str] = None, **extra_fields) -> Any:
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_staff', True)
         
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must be assigned to is_superuser=True.'))
-        
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError(_('Superuser must be assigned to is_staff=True.'))
-        
+
         return self._create_user(email, password, **extra_fields)

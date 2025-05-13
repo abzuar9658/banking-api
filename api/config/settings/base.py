@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'core_apps.user_auth.middleware.CustomHeaderMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -144,6 +145,21 @@ STATIC_ROOT = str(BASE_DIR / "staticfiles")
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "user_auth.User"
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Bank API',
+    'DESCRIPTION': 'API for the Bank',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'LICENSE': {
+        'NAME': 'MIT License',
+        'URL': 'https://opensource.org/license/MIT',
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+}
 
 LOGGING_CONFIG = None
 
