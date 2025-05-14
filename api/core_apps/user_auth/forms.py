@@ -9,7 +9,7 @@ from .models import User
 class UserCreationForm(DjangoUserCreationForm):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id_no', 'security_question', 'security_answer', 'is_superuser', 'role')
+        fields = ('email', 'first_name', 'last_name', 'id_no', 'security_question', 'security_answer', 'is_superuser', 'is_staff', 'role')
         
     def clean_email(self) -> str:
         email = self.cleaned_data.get('email')
@@ -35,15 +35,16 @@ class UserCreationForm(DjangoUserCreationForm):
         security_question = cleaned_data.get('security_question')
         security_answer = cleaned_data.get('security_answer')
         
-        if not is_superuser:
-            if not security_question or not security_answer:
-                self.add_error('security_question', _('Security question and answer are required.'))
+        if is_superuser:
+            cleaned_data['is_staff'] = True
+        elif not security_question or not security_answer:
+            self.add_error('security_question', _('Security question and answer are required.'))
         
         return cleaned_data
 
     def save(self, commit: bool = True) -> User:
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data.get('password'))
+        user.set_password(self.cleaned_data.get('password1'))
         if commit:
             user.save()
         return user        
@@ -51,7 +52,7 @@ class UserCreationForm(DjangoUserCreationForm):
 class UserChangeForm(DjangoUserChangeForm):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id_no', 'security_question', 'security_answer', 'is_superuser', 'role')
+        fields = ('email', 'first_name', 'last_name', 'id_no', 'security_question', 'security_answer', 'is_superuser', 'is_staff', 'role')
     
     def clean_email(self) -> str:
         email = self.cleaned_data.get('email')
@@ -77,15 +78,15 @@ class UserChangeForm(DjangoUserChangeForm):
         security_question = cleaned_data.get('security_question')
         security_answer = cleaned_data.get('security_answer')
         
-        if not is_superuser:
-            if not security_question or not security_answer:
-                self.add_error('security_question', _('Security question and answer are required.'))
+        if is_superuser:
+            cleaned_data['is_staff'] = True
+        elif not security_question or not security_answer:
+            self.add_error('security_question', _('Security question and answer are required.'))
                 
         return cleaned_data
     
     def save(self, commit: bool = True) -> User:
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data.get('password'))
         if commit:
             user.save()
         return user

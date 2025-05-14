@@ -3,11 +3,11 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .emails import send_account_locked_email
 from .managers import UserManager
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     class SecurityQuestions(models.TextChoices):
         FAVORITE_COLOR = 'favorite_color', _('Favorite Color')
         FIRST_PET = 'first_pet', _('First Pet')
@@ -48,6 +48,7 @@ class User(AbstractBaseUser):
     otp_expiry = models.DateTimeField(_('OTP Expiry'), null=True, blank=True)
     is_superuser = models.BooleanField(_('Is Superuser'), default=False)
     is_staff = models.BooleanField(_('Is Staff'), default=False)
+    is_active = models.BooleanField(_('Is Active'), default=True)
     date_joined = models.DateTimeField(_('Date Joined'), default=timezone.now)
     created_at = models.DateTimeField(_('Created At'), default=timezone.now)
     updated_at = models.DateTimeField(_('Updated At'), auto_now=True)
@@ -55,6 +56,11 @@ class User(AbstractBaseUser):
     objects = UserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'id_no', 'security_question', 'security_answer']
+    
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.is_staff = True
+        super().save(*args, **kwargs)
         
     def set_otp(self, otp: str) -> None:
         self.otp = otp
@@ -126,5 +132,8 @@ class User(AbstractBaseUser):
     
     def __str__(self) -> str:
         return f"{self.full_name} - {self.get_role_display()}"
+    
+    def has_module_perms(self, app_label):
+        return self.is_superuser
     
     

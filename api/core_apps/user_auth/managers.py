@@ -17,11 +17,12 @@ def generate_username(email: str) -> str:
     random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=remaining_length))
     return f"{prefix}{random_suffix}"
 
-def validate_email_address(email: str) -> None:
+def validate_email_address(email: str) -> str:
     try:
         validate_email(email)
-    except ValidationError as e:
-        raise ValidationError(_('Enter a valid email address.'))
+    except ValidationError:
+        raise ValidationError(_('Enter a valid email address'))
+    return email
 
 class UserManager(DjangoUserManager):
     def _create_user(self, email, password, **extra_fields):
@@ -32,8 +33,13 @@ class UserManager(DjangoUserManager):
             raise ValueError(_('A password is required'))
         
         email = self.normalize_email(email)
-        validate_email_address(email)
+        email = validate_email_address(email)
         username = generate_username(email)
+        
+        # Ensure is_staff is True for superusers
+        if extra_fields.get('is_superuser'):
+            extra_fields['is_staff'] = True
+            
         user = self.model(email=email, username=username, **extra_fields)
         user.password = make_password(password)
         user.save(using=self._db)
@@ -41,12 +47,18 @@ class UserManager(DjangoUserManager):
     
     def create_user(self, email: str, password: Optional[str] = None, **extra_fields) -> Any:
         extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('is_staff', False)
         return self._create_user(email, password, **extra_fields)
     
     def create_superuser(self, email: str, password: Optional[str] = None, **extra_fields) -> Any:
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('role', 'admin')
         
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must be assigned to is_superuser=True.'))
-
+        
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError(_('Superuser must be assigned to is_staff=True.'))
+        
         return self._create_user(email, password, **extra_fields)
